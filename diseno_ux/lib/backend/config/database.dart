@@ -1,6 +1,5 @@
-import 'package:mysql1/mysql1.dart';
-
 import 'env.dart';
+import 'mysql_compat.dart';
 
 Future<MySqlConnection> openDatabaseConnection() {
   final settings = ConnectionSettings(
@@ -9,6 +8,7 @@ Future<MySqlConnection> openDatabaseConnection() {
     db: envOrThrow('DB_NAME'),
     user: envOrThrow('DB_USER'),
     password: envOrThrow('DB_PASSWORD'),
+    secure: false,
   );
 
   return MySqlConnection.connect(settings);

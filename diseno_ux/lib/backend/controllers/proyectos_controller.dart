@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:mysql1/mysql1.dart';
 import 'package:shelf/shelf.dart';
 import 'package:uuid/uuid.dart';
 
 import '../config/database.dart';
+import '../config/mysql_compat.dart';
 
 const _uuid = Uuid();
 

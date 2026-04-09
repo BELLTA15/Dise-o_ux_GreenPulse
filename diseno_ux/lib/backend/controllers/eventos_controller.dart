@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:mysql1/mysql1.dart';
 import 'package:shelf/shelf.dart';
 
 import '../config/database.dart';
+import '../config/mysql_compat.dart';
 
 Future<Response> listarEventosPendientes(Request request) async {
   final usuarioId = _usuarioIdDesdeRequest(request);

@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:mysql1/mysql1.dart';
 import 'package:shelf/shelf.dart';
 import 'package:bcrypt/bcrypt.dart';
 
 import '../config/database.dart';
+import '../config/mysql_compat.dart';
 import '../config/env.dart';
 
 Future<Response> registroUsuario(Request request) async {
