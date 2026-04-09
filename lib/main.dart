@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import 'app_palette.dart';
 import 'core/api_client.dart';
@@ -35,6 +36,28 @@ class MyApp extends StatelessWidget {
       title: 'GreenPulse UX',
       debugShowCheckedModeBanner: false,
       navigatorKey: _navigatorKey,
+      builder: (context, child) {
+        if (child == null) {
+          return const SizedBox.shrink();
+        }
+
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final shouldUseAppViewport = kIsWeb || screenWidth >= 900;
+
+        if (!shouldUseAppViewport) {
+          return child;
+        }
+
+        return ColoredBox(
+          color: AppPalette.background,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: child,
+            ),
+          ),
+        );
+      },
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: colorScheme,

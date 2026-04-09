@@ -8,7 +8,7 @@ Future<MySqlConnection> openDatabaseConnection() {
     db: envOrThrow('DB_NAME'),
     user: envOrThrow('DB_USER'),
     password: envOrThrow('DB_PASSWORD'),
-    secure: false,
+    secure: true,
   );
 
   return MySqlConnection.connect(settings);
