@@ -5,6 +5,7 @@ import 'package:shelf_router/shelf_router.dart';
 
 import '../middlewares/auth_middleware.dart';
 import 'alertas_routes.dart';
+import 'ajustes_routes.dart';
 import 'auth_routes.dart';
 import 'cultivos_routes.dart';
 import 'estadisticas_routes.dart';
@@ -24,6 +25,7 @@ Handler buildRouter() {
     ..mount('/api/v1/proyectos', protected(buildEstadisticasNestedRoutes()))
     ..mount('/api/v1/cultivos', protected(buildCultivosRoutes()))
     ..mount('/api/v1/cultivos', protected(buildEstadisticasRoutes()))
+    ..mount('/api/v1/ajustes', protected(buildAjustesRoutes()))
     ..mount('/api/v1/alertas', protected(buildAlertasRoutes()))
     ..mount('/api/v1/eventos', protected(buildEventosRoutes()))
     ..mount('/api/v1/sync', protected(buildSyncRoutes()))
