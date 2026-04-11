@@ -66,6 +66,59 @@ class AuthService {
     await prefs.remove(TOKEN_KEY);
   }
 
+  Future<Map<String, dynamic>> getPerfil() async {
+    try {
+      final response = await _dio.get('/auth/perfil');
+      final data = _asMap(response.data);
+      final usuario = data['usuario'];
+      if (usuario is Map) {
+        final map = usuario.map((key, value) => MapEntry(key.toString(), value));
+        await _persistUserPrefs(map);
+      }
+      return data;
+    } on DioException catch (error) {
+      throw Exception(ApiClient.readableError(error));
+    }
+  }
+
+  Future<Map<String, dynamic>> actualizarPerfil({
+    required String nombre,
+    required String correo,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/auth/perfil',
+        data: {'nombre': nombre, 'correo': correo},
+      );
+      final data = _asMap(response.data);
+      final usuario = data['usuario'];
+      if (usuario is Map) {
+        final map = usuario.map((key, value) => MapEntry(key.toString(), value));
+        await _persistUserPrefs(map);
+      }
+      return data;
+    } on DioException catch (error) {
+      throw Exception(ApiClient.readableError(error));
+    }
+  }
+
+  Future<void> cambiarContrasena({
+    required String actualContrasena,
+    required String nuevaContrasena,
+  }) async {
+    try {
+      await _dio.patch(
+        '/auth/contrasena',
+        data: {
+          'actual_contrasena': actualContrasena,
+          'nueva_contrasena': nuevaContrasena,
+        },
+      );
+    } on DioException catch (error) {
+      throw Exception(ApiClient.readableError(error));
+    }
+  }
+
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(TOKEN_KEY);
@@ -92,5 +145,18 @@ class AuthService {
       return value.map((key, value) => MapEntry(key.toString(), value));
     }
     throw Exception('Formato de respuesta inválido');
+  }
+
+  Future<void> _persistUserPrefs(Map<String, dynamic> userMap) async {
+    final prefs = await SharedPreferences.getInstance();
+    final nombre = userMap['nombre']?.toString();
+    final correo = userMap['correo']?.toString();
+
+    if (nombre != null && nombre.isNotEmpty) {
+      await prefs.setString('usuario_nombre', nombre);
+    }
+    if (correo != null && correo.isNotEmpty) {
+      await prefs.setString('usuario_correo', correo);
+    }
   }
 }

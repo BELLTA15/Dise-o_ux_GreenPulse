@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_palette.dart';
 import '../services/auth_service.dart';
+import 'notifications_view.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,6 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadPerfil() async {
     try {
+      await _authService.getPerfil();
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
       setState(() {
@@ -58,6 +60,154 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } finally {
       if (mounted) setState(() => _loggingOut = false);
     }
+  }
+
+  Future<void> _editarPerfilDialog() async {
+    final nombreCtrl = TextEditingController(text: _nombre);
+    final correoCtrl = TextEditingController(text: _correo == '-' ? '' : _correo);
+
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar perfil'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nombreCtrl,
+              decoration: const InputDecoration(labelText: 'Nombre'),
+            ),
+            TextField(
+              controller: correoCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: 'Correo'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    if (save != true) return;
+
+    final nombre = nombreCtrl.text.trim();
+    final correo = correoCtrl.text.trim().toLowerCase();
+    if (nombre.isEmpty || correo.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nombre y correo son obligatorios')),
+      );
+      return;
+    }
+
+    try {
+      await _authService.actualizarPerfil(nombre: nombre, correo: correo);
+      await _loadPerfil();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Perfil actualizado')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _cambiarContrasenaDialog() async {
+    final actualCtrl = TextEditingController();
+    final nuevaCtrl = TextEditingController();
+
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cambiar contraseña'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: actualCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Contraseña actual'),
+            ),
+            TextField(
+              controller: nuevaCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Nueva contraseña'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Actualizar'),
+          ),
+        ],
+      ),
+    );
+
+    if (save != true) return;
+
+    final actualContrasena = actualCtrl.text;
+    final nuevaContrasena = nuevaCtrl.text;
+
+    if (actualContrasena.isEmpty || nuevaContrasena.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Completa ambas contraseñas')),
+      );
+      return;
+    }
+
+    try {
+      await _authService.cambiarContrasena(
+        actualContrasena: actualContrasena,
+        nuevaContrasena: nuevaContrasena,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Contraseña actualizada')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
+  }
+
+  void _openHelp() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ayuda y soporte'),
+        content: const Text(
+          'Si tienes problemas, escríbenos a soporte@greenpulse.app',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -117,7 +267,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                OutlinedButton(onPressed: () {}, child: const Text('Editar')),
+                OutlinedButton(
+                  onPressed: _editarPerfilDialog,
+                  child: const Text('Editar'),
+                ),
               ],
             ),
           ),
@@ -132,28 +285,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        const _ProfileActionTile(
+        _ProfileActionTile(
           icon: Icons.badge_outlined,
           title: 'Datos personales',
           subtitle: 'Nombre, correo y teléfono',
+          onTap: _editarPerfilDialog,
         ),
         const SizedBox(height: 8),
-        const _ProfileActionTile(
+        _ProfileActionTile(
           icon: Icons.lock_outline_rounded,
           title: 'Seguridad',
           subtitle: 'Contraseña y acceso',
+          onTap: _cambiarContrasenaDialog,
         ),
         const SizedBox(height: 8),
-        const _ProfileActionTile(
+        _ProfileActionTile(
           icon: Icons.notifications_none_rounded,
           title: 'Notificaciones',
           subtitle: 'Recordatorios y alertas',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const NotificationsScreen(),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 8),
-        const _ProfileActionTile(
+        _ProfileActionTile(
           icon: Icons.help_outline_rounded,
           title: 'Ayuda y soporte',
           subtitle: 'Centro de ayuda',
+          onTap: _openHelp,
         ),
         const SizedBox(height: 16),
         OutlinedButton.icon(
@@ -177,11 +340,13 @@ class _ProfileActionTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +359,7 @@ class _ProfileActionTile extends StatelessWidget {
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: () {},
+        onTap: onTap,
       ),
     );
   }

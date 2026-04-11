@@ -18,6 +18,7 @@ Handler buildRouter() {
 
   final router = Router()
     ..mount('/api/v1/auth', buildAuthRoutes())
+    ..mount('/api/v1/auth', protected(buildAuthProtectedRoutes()))
     ..mount('/api/v1/proyectos', buildProyectosProtectedHandler())
     ..mount('/api/v1/proyectos', protected(buildCultivosNestedRoutes()))
     ..mount('/api/v1/proyectos', protected(buildEstadisticasNestedRoutes()))

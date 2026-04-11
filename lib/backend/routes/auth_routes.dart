@@ -11,3 +11,13 @@ Router buildAuthRoutes() {
 
   return router;
 }
+
+Router buildAuthProtectedRoutes() {
+  final router = Router();
+
+  router.get('/perfil', obtenerPerfil);
+  router.put('/perfil', actualizarPerfil);
+  router.patch('/contrasena', cambiarContrasena);
+
+  return router;
+}

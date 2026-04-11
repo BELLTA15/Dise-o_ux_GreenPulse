@@ -7,6 +7,7 @@ import 'services/auth_service.dart';
 import 'views/activity_view.dart';
 import 'views/auth_view.dart';
 import 'views/home_view.dart';
+import 'views/notifications_view.dart';
 import 'views/profile_view.dart';
 import 'views/projects_view.dart';
 import 'views/settings_view.dart';
@@ -65,7 +66,6 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           backgroundColor: AppPalette.surface,
           foregroundColor: AppPalette.textPrimary,
-          elevation: 0,
           centerTitle: false,
         ),
         cardTheme: CardThemeData(
@@ -180,7 +180,13 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const NotificationsScreen(),
+                ),
+              );
+            },
             icon: const Icon(Icons.notifications_none_rounded),
           ),
         ],
