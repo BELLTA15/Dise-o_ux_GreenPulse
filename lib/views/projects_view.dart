@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_palette.dart';
 import '../models/lote.dart';
 import '../services/proyectos_service.dart';
+import 'project_management_view.dart';
 
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});
@@ -44,6 +45,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     final nombreCtrl = TextEditingController();
     final tipoCtrl = TextEditingController();
     final areaCtrl = TextEditingController();
+    final coordenadasCtrl = TextEditingController();
 
     final result = await showDialog<bool>(
       context: context,
@@ -66,6 +68,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Área m²'),
               ),
+              TextField(
+                controller: coordenadasCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Coordenadas (latitud, longitud)',
+                ),
+              ),
             ],
           ),
           actions: [
@@ -84,12 +92,32 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
     if (result != true) return;
 
+    final nombre = nombreCtrl.text.trim();
+    final tipoCultivo = tipoCtrl.text.trim();
+    final areaMetrosCuadrados = double.tryParse(areaCtrl.text.trim());
+    final coordenadas = coordenadasCtrl.text.trim();
+
+    if (nombre.isEmpty ||
+        tipoCultivo.isEmpty ||
+        areaMetrosCuadrados == null ||
+        coordenadas.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Completa nombre, tipo de cultivo, área y coordenadas (latitud, longitud).',
+          ),
+        ),
+      );
+      return;
+    }
+
     try {
       await _service.crearProyecto({
-        'nombre': nombreCtrl.text.trim(),
-        'tipo_cultivo': tipoCtrl.text.trim(),
-        'area_m2': double.tryParse(areaCtrl.text.trim()),
-        'coordenadas': '',
+        'nombre': nombre,
+        'tipo_cultivo': tipoCultivo,
+        'area_metros_cuadrados': areaMetrosCuadrados,
+        'coordenadas': coordenadas,
       });
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -235,6 +263,15 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     status: lote.activo == 1 ? 'Activo' : 'Inactivo',
                     details:
                         '${lote.tipoCultivo ?? 'Sin tipo'} · ${lote.areaM2?.toStringAsFixed(1) ?? '-'} m²',
+                    onManage: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ProjectManagementScreen(loteId: lote.loteId),
+                        ),
+                      );
+                      await _loadProyectos();
+                    },
                   ),
                 ),
               );
@@ -250,11 +287,13 @@ class _ProjectTile extends StatelessWidget {
     required this.title,
     required this.status,
     required this.details,
+    required this.onManage,
   });
 
   final String title;
   final String status;
   final String details;
+  final VoidCallback onManage;
 
   @override
   Widget build(BuildContext context) {
@@ -267,7 +306,7 @@ class _ProjectTile extends StatelessWidget {
         title: Text(title),
         subtitle: Text('$status · $details'),
         trailing: OutlinedButton(
-          onPressed: () {},
+          onPressed: onManage,
           child: const Text('Gestionar'),
         ),
       ),

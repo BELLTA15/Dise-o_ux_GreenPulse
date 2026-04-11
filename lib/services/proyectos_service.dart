@@ -52,6 +52,23 @@ class ProyectosService {
     }
   }
 
+  Future<Lote> actualizarProyecto(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put('/proyectos/$id', data: data);
+      final responseMap = _asMap(response.data);
+
+      final payload = (responseMap['proyecto'] is Map)
+          ? _asMap(responseMap['proyecto'])
+          : (responseMap['data'] is Map)
+          ? _asMap(responseMap['data'])
+          : responseMap;
+
+      return Lote.fromJson(_normalizeLote(payload));
+    } on DioException catch (error) {
+      throw Exception(ApiClient.readableError(error));
+    }
+  }
+
   List<Map<String, dynamic>> _extractList(
     Map<String, dynamic> data, {
     required String preferredKey,
