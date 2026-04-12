@@ -460,6 +460,8 @@ Future<int> _checkAlertas(
   double humedad,
   double ph,
 ) async {
+  await _asegurarConfiguracionesPorDefecto(connection, loteId, usuarioId);
+
   final configuraciones = await connection.query(
     '''
     SELECT
@@ -525,6 +527,69 @@ Future<int> _checkAlertas(
   }
 
   return alertasCreadas;
+}
+
+Future<void> _asegurarConfiguracionesPorDefecto(
+  MySqlConnection connection,
+  int loteId,
+  int usuarioId,
+) async {
+  final existentes = await connection.query(
+    '''
+    SELECT config_id
+    FROM CONFIGURACION_ALERTA
+    WHERE lote_id = ? AND usuario_id = ?
+    LIMIT 1
+    ''',
+    [loteId, usuarioId],
+  );
+
+  if (existentes.isNotEmpty) {
+    return;
+  }
+
+  final defaults = <Map<String, dynamic>>[
+    {
+      'variable': 'TEMPERATURA',
+      'umbral_minimo': 15,
+      'umbral_maximo': 35,
+    },
+    {
+      'variable': 'HUMEDAD',
+      'umbral_minimo': 30,
+      'umbral_maximo': 80,
+    },
+    {
+      'variable': 'PH',
+      'umbral_minimo': 5.5,
+      'umbral_maximo': 7.5,
+    },
+  ];
+
+  for (final config in defaults) {
+    await connection.query(
+      '''
+      INSERT INTO CONFIGURACION_ALERTA (
+        lote_id,
+        usuario_id,
+        variable,
+        umbral_minimo,
+        umbral_maximo,
+        activa,
+        sync_estado
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ''',
+      [
+        loteId,
+        usuarioId,
+        config['variable'],
+        config['umbral_minimo'],
+        config['umbral_maximo'],
+        1,
+        'PENDING',
+      ],
+    );
+  }
 }
 
 int _usuarioIdDesdeRequest(Request request) {
