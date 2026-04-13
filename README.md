@@ -110,7 +110,7 @@ DB_USER=tu_usuario
 DB_PASSWORD=tu_password
 JWT_SECRET=tu_secreto_jwt
 JWT_EXPIRES_IN=7d
-PORT=3000
+PORT=8000
 ```
 
 ### 3. Base URL del frontend
