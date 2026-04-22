@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/mateo/Documents/GITHUB/Dise-o_ux_GreenPulse/linux"
+    "cmake.sourceDirectory": "C:/Users/mateo/Documents/GITHUB/Dise-o_ux_GreenPulse/linux",
+    "cmake.ignoreCMakeListsMissing": true
 }
